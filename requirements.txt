@@ -4,3 +4,4 @@ Pillow
 gunicorn
 whitenoise
 psycopg2-binary
+pip install -r
