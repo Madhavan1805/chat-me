@@ -1,10 +1,17 @@
 services:
   - type: web
     name: mysocial
-    env: python
+    runtime: python
     plan: free
-    buildCommand: "pip install -r requirements.txt && python mysocial/manage.py collectstatic --noinput"
-    startCommand: "gunicorn mysocial.wsgi:application"
+    rootDir: mysocial
+    buildCommand: "bash build.sh"
+    startCommand: "gunicorn mysocial.wsgi:application --bind 0.0.0.0:$PORT --timeout 120 --workers 1"
     envVars:
       - key: DJANGO_SETTINGS_MODULE
-        value: "mysocial.settings"
+        value: mysocial.settings
+      - key: PYTHON_VERSION
+        value: "3.12.0"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: WEB_CONCURRENCY
+        value: "1"

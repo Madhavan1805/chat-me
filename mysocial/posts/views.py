@@ -19,7 +19,7 @@ def is_admin(user):
 
 @login_required 
 def home_view(request):
-    all_posts = Post.objects.all().select_related('user').prefetch_related('user__profile', 'likes', 'comment_set').order_by('-created_at')
+    all_posts = Post.objects.all().select_related('user').prefetch_related('user__profile', 'likes', 'comments').order_by('-created_at')
     
     for post in all_posts:
         post.comment_form = CommentForm()

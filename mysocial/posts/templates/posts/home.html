@@ -61,7 +61,7 @@
                     </button>
 
                     <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#comments-{{ post.id }}">
-                        Comment ({{ post.comment_set.count }})
+                        Comment ({{ post.comments.count }})
                     </button>
                 </div>
             </div>
@@ -74,7 +74,7 @@
                 </form>
 
                 <div class="comments-list mt-2">
-                    {% for comment in post.comment_set.all|slice:":5" %}
+                    {% for comment in post.comments.all|slice:":5" %}
                         <div class="d-flex mb-1">
                             <small class="fw-bold me-2">{{ comment.user.username }}:</small>
                             <small>{{ comment.text }}</small>

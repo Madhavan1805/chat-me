@@ -1,1 +1,1 @@
-web: gunicorn mysocial.wsgi:application
+web: cd mysocial && gunicorn app:app
