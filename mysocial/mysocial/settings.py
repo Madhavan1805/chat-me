@@ -21,16 +21,22 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-!ch2%js88+9fn)=@$pqle3f_1wtto1j-01b@#+$4ajh^01&#vq'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-!ch2%js88+9fn)=@$pqle3f_1wtto1j-01b@#+$4ajh^01&#vq')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+if 'RENDER' in os.environ:
+    DEBUG = False
 
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    '.onrender.com',  # Render deployment
+    '.onrender.com',
+    '.render.com',
 ]
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 
 # Application definition
@@ -125,8 +131,10 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+if not DEBUG:
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
@@ -142,7 +150,5 @@ EMAIL_HOST_USER = 'உங்கள்-gmail-ஐடி@gmail.com'
 EMAIL_HOST_PASSWORD = 'உங்கள்-app-password' 
 
 LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = 'home'
-
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
