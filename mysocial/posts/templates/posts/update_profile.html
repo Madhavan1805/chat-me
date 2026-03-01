@@ -1,0 +1,77 @@
+{% extends 'posts/base.html' %}
+
+{% block title %}Edit Profile{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header glass-header">
+                <strong>Edit Profile</strong>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data" class="profile-form">
+                    {% csrf_token %}
+
+                    <h5 class="mb-3 fw-bold">Account</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="profile-form-field">
+                                <div class="profile-form-field-inner">
+                                    {{ u_form.username.label_tag }}
+                                    {{ u_form.username }}
+                                    {% for error in u_form.username.errors %}
+                                        <div class="text-danger small">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="profile-form-field">
+                                <div class="profile-form-field-inner">
+                                    {{ u_form.email.label_tag }}
+                                    {{ u_form.email }}
+                                    {% for error in u_form.email.errors %}
+                                        <div class="text-danger small">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h5 class="mb-3 fw-bold">Profile</h5>
+                    <div class="mb-3 d-flex align-items-center gap-3">
+                        <img src="{{ request.user.profile.image.url }}" alt="Current avatar" class="rounded-circle" style="width:64px;height:64px;object-fit:cover;">
+                        <div class="flex-grow-1">
+                            {{ p_form.image.label_tag }}
+                            {{ p_form.image }}
+                            {% for error in p_form.image.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        {{ p_form.bio.label_tag }}
+                        {{ p_form.bio }}
+                        {% for error in p_form.bio.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a class="btn btn-glass-outline" href="{% url 'profile' username=request.user.username %}">Cancel</a>
+                        <button type="submit" class="btn btn-glass">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 d-none d-md-block">
+        <!-- Optional preview/sidebar -->
+    </div>
+    
+</div>
+{% endblock content %}
+
+

@@ -1,0 +1,135 @@
+{% extends 'posts/base.html' %}
+
+{% block title %}Search Results for "{{ query }}"{% endblock %}
+
+{% block content %}
+<!-- ✅ Add Animate.css if not already included -->
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+/>
+
+<style>
+    /* 🎨 Smooth card hover and transition effects */
+    .search-card {
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        border-radius: 15px;
+    }
+    .search-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+
+    /* ✨ Profile images with border glow */
+    .user-avatar {
+        border: 2px solid #0d6efd;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .user-avatar:hover {
+        transform: scale(1.1);
+        box-shadow: 0 0 10px rgba(13, 110, 253, 0.5);
+    }
+
+    /* 🧭 Section titles */
+    h4.section-title {
+        color: #0d6efd;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+
+    /* 🌈 Fade in effect for entire results area */
+    .fade-in {
+        animation: fadeInUp 0.6s ease both;
+    }
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 🪶 Card content animation */
+    .animate-item {
+        animation: fadeIn 0.8s ease;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+</style>
+
+<div class="container animate__animated animate__fadeIn">
+    <h2 class="mb-4 fw-bold text-center">
+        Search Results for: <span class="text-primary">"{{ query }}"</span>
+    </h2>
+
+    <div class="row g-4">
+        <!-- 🧍 User Results -->
+        <div class="col-md-5 fade-in">
+            <h4 class="border-bottom pb-2 mb-3 section-title">
+                <i class="bi bi-people-fill me-1"></i> Users ({{ results.users.count }})
+            </h4>
+
+            {% if results.users %}
+                <div class="list-group">
+                    {% for target_user in results.users %}
+                    <a href="{% url 'profile' username=target_user.username %}" 
+                       class="list-group-item list-group-item-action d-flex align-items-center search-card animate__animated animate__fadeInLeft"
+                       style="animation-delay: {{ forloop.counter0|add:"0.1"|floatformat:1 }}s;">
+                        <img src="{{ target_user.profile.image.url }}" 
+                             alt="DP" 
+                             class="rounded-circle me-3 user-avatar" 
+                             style="width: 55px; height: 55px; object-fit: cover;">
+                        <div>
+                            <h6 class="mb-0 fw-bold text-dark">{{ target_user.username }}</h6>
+                            <small class="text-muted">{{ target_user.email }}</small>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-warning animate__animated animate__fadeInUp">
+                    <i class="bi bi-exclamation-circle me-1"></i>
+                    No users found matching your query.
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- 📝 Post Results -->
+        <div class="col-md-7 fade-in">
+            <h4 class="border-bottom pb-2 mb-3 section-title">
+                <i class="bi bi-file-post me-1"></i> Posts ({{ results.posts.count }})
+            </h4>
+
+            {% if results.posts %}
+                {% for post in results.posts %}
+                    <div class="card shadow-sm mb-3 search-card animate__animated animate__fadeInRight"
+                         style="animation-delay: {{ forloop.counter0|add:"0.1"|floatformat:1 }}s;">
+                        <div class="card-body">
+                            <p class="card-text">{{ post.content|truncatechars:150 }}</p>
+                            
+                            <div class="d-flex align-items-center mt-3">
+                                <img src="{{ post.user.profile.image.url }}" 
+                                     alt="DP" 
+                                     class="rounded-circle me-2 user-avatar" 
+                                     style="width: 35px; height: 35px; object-fit: cover;">
+                                <small class="text-muted">
+                                    Posted by 
+                                    <a href="{% url 'profile' username=post.user.username %}" 
+                                       class="fw-bold text-decoration-none text-primary">
+                                       {{ post.user.username }}
+                                    </a> 
+                                    {{ post.created_at|timesince }} ago
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="alert alert-warning animate__animated animate__fadeInUp">
+                    <i class="bi bi-exclamation-circle me-1"></i>
+                    No posts found matching your query.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock content %}
