@@ -1,0 +1,173 @@
+{% extends 'posts/base.html' %}
+
+{% block title %}Admin Dashboard | Chat Me{% endblock %}
+
+{% block content %}
+<style>
+/* ===== BACKGROUND ===== */
+body {
+    background: linear-gradient(135deg, #ff6b6b, #f06595, #845ef7);
+    background-size: 300% 300%;
+    animation: gradientMove 10s ease infinite;
+}
+
+@keyframes gradientMove {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* ===== CARD & TABLE ANIMATION ===== */
+.table-container {
+    animation: fadeInUp 1s ease forwards;
+    opacity: 0;
+    transform: translateY(30px);
+}
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===== TABLE STYLE ===== */
+.table {
+    border-radius: 1rem;
+    overflow: hidden;
+    background-color: #fff;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.table th {
+    background-color: #dc3545;
+    color: white;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(255, 228, 230, 0.5);
+    transition: background-color 0.3s ease;
+}
+
+/* ===== BUTTON STYLES ===== */
+.btn-warning {
+    background: linear-gradient(135deg, #ffca3a, #ffb703);
+    border: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.btn-warning:hover {
+    transform: scale(1.05);
+    box-shadow: 0 5px 10px rgba(255, 193, 7, 0.4);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #dc3545, #ff6b6b);
+    border: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.btn-danger:hover {
+    transform: scale(1.05);
+    box-shadow: 0 5px 10px rgba(220, 53, 69, 0.4);
+}
+
+/* ===== ALERT ANIMATION ===== */
+.alert {
+    animation: fadeInAlert 0.6s ease forwards;
+    transform: translateY(-10px);
+    opacity: 0;
+}
+
+@keyframes fadeInAlert {
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* ===== HEADER STYLE ===== */
+.dashboard-header {
+    text-align: center;
+    font-weight: 700;
+    color: #dc3545;
+    letter-spacing: 1px;
+    margin-bottom: 1.5rem;
+    animation: fadeInDown 0.8s ease forwards;
+    opacity: 0;
+    transform: translateY(-20px);
+}
+
+@keyframes fadeInDown {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+
+<div class="container py-5">
+    <h2 class="dashboard-header">
+        <i class="bi bi-speedometer2 me-2"></i> Admin Dashboard (All User Posts)
+    </h2>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {% if posts %}
+        <div class="table-container mt-4">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover table-bordered align-middle">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>User</th>
+                            <th>Content Preview</th>
+                            <th>Image</th>
+                            <th>Posted Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for post in posts %}
+                        <tr>
+                            <td>{{ post.id }}</td>
+                            <td><strong>{{ post.user.username }}</strong></td>
+                            <td>{{ post.content|truncatechars:50 }}</td>
+                            <td>
+                                {% if post.image %}
+                                    <a href="{{ post.image.url }}" target="_blank" class="text-decoration-none text-primary">View Image</a>
+                                {% else %}
+                                    <span class="text-muted">No Image</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ post.created_at|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                <a href="{% url 'update_post' post.id %}" class="btn btn-warning btn-sm me-2">
+                                    <i class="bi bi-pencil-square"></i> Edit
+                                </a>
+                                <a href="{% url 'delete_post' post.id %}" class="btn btn-danger btn-sm">
+                                    <i class="bi bi-trash3"></i> Delete
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-info shadow-sm mt-4 text-center">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            No posts have been created by any user yet.
+        </div>
+    {% endif %}
+</div>
+{% endblock content %}

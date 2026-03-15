@@ -1,0 +1,348 @@
+{% extends 'posts/base.html' %}
+
+{% block title %}Chat with {{ other_user.username }}{% endblock %}
+
+{% block content %}
+<!-- ✅ Bootstrap 5 + Animate.css (include in base.html if not already) -->
+<link
+  href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+  rel="stylesheet"
+/>
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+/>
+
+<style>
+    /* Glassmorphism for Bubbles */
+    .message-bubble {
+        padding: 12px 16px;
+        border-radius: 20px;
+        max-width: 70%;
+        margin-bottom: 12px;
+        word-wrap: break-word;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        animation: slideIn 0.3s ease;
+    }
+
+    .sent {
+        background: linear-gradient(135deg, rgba(168, 85, 247, 0.8), rgba(217, 70, 239, 0.8));
+        color: white;
+        align-self: flex-end;
+        border-bottom-right-radius: 4px;
+    }
+    .received {
+        background: rgba(255, 255, 255, 0.15);
+        color: white;
+        align-self: flex-start;
+        border-bottom-left-radius: 4px;
+    }
+    
+    .chat-image {
+        max-width: 100%;
+        border-radius: 12px;
+        margin-bottom: 8px;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    .chat-image:hover {
+        transform: scale(1.02);
+    }
+
+    /* Header Styling */
+    .chat-header {
+        position: sticky;
+        top: 70px;
+        z-index: 10;
+        background: rgba(255, 255, 255, 0.1) !important;
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        border-radius: 15px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+    
+    .message-container {
+        max-height: 65vh;
+        overflow-y: auto;
+        padding: 20px;
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        backdrop-filter: blur(10px);
+        display: flex;
+        flex-direction: column;
+    }
+
+    #image-preview-container {
+        display: none;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        margin-bottom: 10px;
+    }
+
+    /* Form Input Styling */
+    form input[type="text"], form textarea {
+        flex-grow: 1;
+        border-radius: 20px;
+        border: 1px solid #ccc;
+        padding: 10px 15px;
+        resize: none;
+        transition: all 0.3s ease;
+    }
+
+    form input[type="text"]:focus, form textarea:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 8px rgba(13, 110, 253, 0.3);
+    }
+    
+    #emoji-button {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 0 10px;
+        transition: transform 0.2s;
+    }
+    #emoji-button:hover {
+        transform: scale(1.1);
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+<div class="container py-4 animate__animated animate__fadeIn">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+
+            <!-- Header -->
+            <div class="card p-3 mb-3 chat-header shadow-lg">
+                <div class="d-flex align-items-center">
+                    <a href="{% url 'inbox' %}" class="btn btn-sm btn-outline-light me-3 border-0">
+                        <i class="bi bi-arrow-left fs-4"></i>
+                    </a>
+                    <div class="position-relative">
+                        <img src="{{ other_user.profile.image.url }}" 
+                             alt="DP" 
+                             class="rounded-circle me-2" 
+                             style="width: 45px; height: 45px; object-fit: cover; border: 2px solid rgba(255,255,255,0.2);">
+                        {% if other_user.profile.is_online %}
+                            <span class="position-absolute bottom-0 end-0 translate-middle p-1 bg-success border border-light rounded-circle" style="width: 12px; height: 12px;"></span>
+                        {% endif %}
+                    </div>
+                    <div class="ms-2">
+                        <a href="{% url 'profile' username=other_user.username %}" 
+                           class="text-decoration-none fw-bold text-white fs-5 d-block">
+                            {{ other_user.username }}
+                        </a>
+                        <small class="text-white-50">
+                            {% if other_user.profile.is_online %}
+                                Online
+                            {% else %}
+                                Last seen {{ other_user.profile.last_seen|timesince }} ago
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messages -->
+            <div class="message-container shadow-sm animate__animated animate__fadeInUp" id="chat-messages-box">
+                {% for message in messages_list %}
+                    <div class="message-bubble {% if message.sender == request.user %}sent {% if message.is_read %}read{% endif %}{% else %}received{% endif %}" id="msg-bubble-{{ message.id }}" style="position: relative;">
+                        
+                        {% if message.sender == request.user %}
+                        <div class="dropdown message-actions" style="position: absolute; top: 5px; right: -25px; display: none;">
+                            <button class="btn btn-sm text-muted p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="min-width: 100px;">
+                                <li><button class="dropdown-item small" onclick="editMessage({{ message.id }})"><i class="bi bi-pencil me-2"></i>Edit</button></li>
+                                <li><button class="dropdown-item small text-danger" onclick="deleteMessage({{ message.id }})"><i class="bi bi-trash me-2"></i>Delete</button></li>
+                            </ul>
+                        </div>
+                        {% endif %}
+
+                        {% if message.image %}
+                        <img src="{{ message.image.url }}" class="chat-image" onclick="window.open(this.src)">
+                        {% endif %}
+                        <p class="mb-1 message-text" id="msg-text-{{ message.id }}">{{ message.content|default:"" }}</p>
+                        
+                        <small class="d-block text-end opacity-75" style="font-size: 0.75em;">
+                            {{ message.timestamp|date:"H:i" }}
+                            {% if message.sender == request.user %}
+                                {% if message.is_read %}
+                                    <i class="bi bi-check2-all ms-1"></i>
+                                {% else %}
+                                    <i class="bi bi-check2 ms-1"></i>
+                                {% endif %}
+                            {% endif %}
+                        </small>
+                    </div>
+                {% empty %}
+                    <div class="alert alert-warning text-center animate__animated animate__fadeInUp">
+                        Start the conversation! Send the first message.
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Message Input -->
+            <div class="card p-3 shadow-lg mt-3 position-relative animate__animated animate__fadeInUp glass-card" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
+                <div id="image-preview-container">
+                    <img id="image-preview" src="" style="max-height: 100px; border-radius: 8px;">
+                    <button type="button" class="btn-close btn-close-white ms-2" onclick="clearImage()"></button>
+                </div>
+
+                <form method="post" enctype="multipart/form-data" action="{% url 'chat_detail' conversation.id %}" class="d-flex align-items-center">
+                    {% csrf_token %}
+                    
+                    <button type="button" id="emoji-button" title="Insert Emoji">😀</button>
+                    <label for="id_image" class="btn btn-link text-white me-2" style="cursor: pointer;">
+                        <i class="bi bi-image fs-4"></i>
+                    </label>
+                    <input type="file" name="image" id="id_image" class="d-none" accept="image/*" onchange="previewImage(this)">
+                    
+                    {{ form.content }}
+                    
+                    <button type="submit" class="btn btn-glow-chat ms-2 rounded-pill px-4" style="background: linear-gradient(135deg, #a855f7, #d946ef); border: none; color: white;">
+                        <i class="bi bi-send-fill"></i>
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/@picmo/picker@5.8.5/dist/umd/index.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-scroll logic
+        const container = document.querySelector('.message-container');
+        if (container) {
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Emoji Picker Logic
+        const emojiButton = document.querySelector('#emoji-button');
+        const pickerContainer = document.querySelector('#emoji-picker-container');
+        const inputField = document.querySelector('input[name="content"]');
+        
+        if (typeof picmo !== 'undefined') {
+            const picker = picmo.createPicker({
+                rootElement: pickerContainer,
+                visibleRows: 4,
+                showPreview: false
+            });
+
+            // Toggle picker
+            emojiButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                pickerContainer.style.display = pickerContainer.style.display === 'none' ? 'block' : 'none';
+            });
+
+            // Handle emoji selection
+            picker.addEventListener('emoji:select', event => {
+                const cursorPosition = inputField.selectionStart;
+                const textBefore = inputField.value.substring(0, cursorPosition);
+                const textAfter  = inputField.value.substring(cursorPosition, inputField.value.length);
+                
+                inputField.value = textBefore + event.emoji + textAfter;
+                
+                // Move cursor after the inserted emoji
+                inputField.selectionStart = inputField.selectionEnd = cursorPosition + event.emoji.length;
+                inputField.focus();
+            });
+
+            // Close picker when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!emojiButton.contains(e.target) && !pickerContainer.contains(e.target)) {
+                    pickerContainer.style.display = 'none';
+                }
+            });
+        }
+    });
+
+    function previewImage(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('image-preview').src = e.target.result;
+                document.getElementById('image-preview-container').style.display = 'block';
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function clearImage() {
+        document.getElementById('id_image').value = '';
+        document.getElementById('image-preview-container').style.display = 'none';
+    }
+
+    // Chat Message Actions (Edit & Delete)
+    function editMessage(msgId) {
+        const textElement = document.getElementById(`msg-text-${msgId}`);
+        const currentText = textElement.innerText;
+        
+        const newText = prompt("Edit your message:", currentText);
+        if (newText !== null && newText.trim() !== "" && newText !== currentText) {
+            
+            const formData = new FormData();
+            formData.append('content', newText);
+            formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+            fetch(`/chat/message/${msgId}/edit/`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    textElement.innerText = data.content;
+                } else {
+                    alert("Error editing message: " + data.message);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    }
+
+    function deleteMessage(msgId) {
+        if (confirm("Are you sure you want to delete this message?")) {
+            const formData = new FormData();
+            formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+            fetch(`/chat/message/${msgId}/delete/`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    const bubble = document.getElementById(`msg-bubble-${msgId}`);
+                    if (bubble) {
+                        bubble.style.display = 'none';
+                    }
+                } else {
+                    alert("Error deleting message: " + data.message);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    }
+</script>
+
+<!-- ✅ Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock content %}

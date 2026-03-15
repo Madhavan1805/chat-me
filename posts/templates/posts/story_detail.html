@@ -1,0 +1,426 @@
+{% extends 'posts/base.html' %}
+
+{% block title %}Story from {{ story_user.username }}{% endblock %}
+
+{% block content %}
+<style>
+    .story-container {
+        max-width: 500px;
+        margin: 0 auto;
+        position: relative;
+        height: 80vh;
+        background: rgba(0, 0, 0, 0.45);
+        backdrop-filter: blur(25px) saturate(180%);
+        -webkit-backdrop-filter: blur(25px) saturate(180%);
+        border-radius: 20px;
+        border: 1.5px solid rgba(255, 255, 255, 0.15);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+    .story-bg-animate {
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        z-index: 1;
+        background: radial-gradient(circle at 30% 30%, rgba(168, 85, 247, 0.4), transparent 50%),
+                    radial-gradient(circle at 70% 70%, rgba(217, 70, 239, 0.4), transparent 50%),
+                    radial-gradient(circle at 30% 70%, rgba(129, 140, 248, 0.4), transparent 50%);
+        animation: rotate 20s linear infinite;
+        filter: blur(60px);
+    }
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    .story-header {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        padding: 25px 15px 15px;
+        background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);
+        z-index: 30;
+        display: flex;
+        align-items: center;
+    }
+    .story-image {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        position: relative;
+        z-index: 2;
+    }
+    .story-caption {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 40px 20px;
+        background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+        color: white;
+        text-align: center;
+        font-size: 1.1rem;
+        z-index: 3;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+    .progress-bar-container {
+        position: absolute;
+        top: 15px;
+        left: 10px;
+        right: 10px;
+        height: 3px;
+        display: flex;
+        gap: 5px;
+        z-index: 20;
+    }
+    .progress-segment {
+        flex: 1;
+        background: rgba(255,255,255,0.2);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .progress-fill {
+        height: 100%;
+        background: white;
+        width: 0%;
+        transition: width linear;
+        box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+    }
+    .floating-glass {
+        position: absolute;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(5px);
+        border-radius: 50%;
+        z-index: 1;
+        pointer-events: none;
+    }
+    .floating-glass {
+        position: absolute;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(5px);
+        border-radius: 50%;
+        z-index: 1;
+        pointer-events: none;
+    }
+    .reaction-bar {
+        position: absolute;
+        bottom: 100px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 12px;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(15px);
+        padding: 8px 16px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        z-index: 20;
+    }
+    .reaction-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .reaction-btn:hover {
+        transform: scale(1.4);
+    }
+    .viewers-badge {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        cursor: pointer;
+        z-index: 20;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .viewers-modal {
+        position: absolute;
+        bottom: -100%;
+        left: 0;
+        right: 0;
+        height: 50%;
+        background: rgba(20, 10, 35, 0.95);
+        backdrop-filter: blur(20px);
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+        z-index: 100;
+        transition: bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        padding: 20px;
+        border-top-left-radius: 24px;
+        border-top-right-radius: 24px;
+    }
+    .viewers-modal.show {
+        bottom: 0;
+    }
+    .viewer-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+</style>
+
+<div class="container py-4">
+    <div class="story-container shadow-2xl animate__animated animate__zoomIn">
+        <div class="story-bg-animate"></div>
+        <div class="floating-glass" style="width: 100px; height: 100px; top: 10%; left: -10%;"></div>
+        <div class="floating-glass" style="width: 150px; height: 150px; bottom: 5%; right: -5%;"></div>
+        <div class="floating-glass" style="width: 60px; height: 60px; top: 40%; right: 10%;"></div>
+        
+        <div class="progress-bar-container" id="progress-container">
+            {% for story in stories %}
+            <div class="progress-segment">
+                <div class="progress-fill" data-index="{{ forloop.counter0 }}"></div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="story-header">
+            <img src="{{ story_user.profile.image.url }}" class="rounded-circle me-3" style="width:40px; height:40px; border:2px solid white;">
+            <div class="text-white">
+                <div class="fw-bold">{{ story_user.username }}</div>
+                <small class="opacity-75" id="story-time"></small>
+            </div>
+            <div class="ms-auto d-flex align-items-center">
+                <button id="delete-story-btn" class="btn btn-sm btn-danger me-2 d-none" onclick="deleteStory()">
+                    <i class="bi bi-trash"></i>
+                </button>
+                <button id="close-story" class="btn-close btn-close-white"></button>
+            </div>
+        </div>
+
+        <div id="story-display" class="h-100 position-relative" style="z-index: 2;">
+            {% for story in stories %}
+            <div class="story-content d-none" 
+                 data-id="{{ story.id }}" 
+                 data-image="{{ story.image.url }}" 
+                 data-caption="{{ story.caption }}" 
+                 data-time="{{ story.created_at|timesince }}" 
+                 data-audio="{% if story.audio %}{{ story.audio.url }}{% endif %}"
+                 data-owner="{% if story.user == request.user %}true{% else %}false{% endif %}">
+            </div>
+            {% endfor %}
+            <div id="active-content-wrapper" class="h-100 w-100">
+                <img id="active-image" src="" class="story-image">
+                <div id="active-caption" class="story-caption"></div>
+            </div>
+            <audio id="story-audio" style="display: none;"></audio>
+        </div>
+
+        <!-- Navigation Areas -->
+        <div class="position-absolute top-0 start-0 h-100 w-25" style="z-index: 15; cursor: pointer;" onclick="prevStory()"></div>
+        <div class="position-absolute top-0 end-0 h-100 w-25" style="z-index: 15; cursor: pointer;" onclick="nextStory()"></div>
+
+        <!-- Reactions Bar (Only for others) -->
+        {% if story_user != request.user %}
+        <div class="reaction-bar animate__animated animate__fadeInUp">
+            <button class="reaction-btn" onclick="sendReaction('❤️', event)">❤️</button>
+            <button class="reaction-btn" onclick="sendReaction('🔥', event)">🔥</button>
+            <button class="reaction-btn" onclick="sendReaction('😂', event)">😂</button>
+            <button class="reaction-btn" onclick="sendReaction('😮', event)">😮</button>
+            <button class="reaction-btn" onclick="sendReaction('👏', event)">👏</button>
+        </div>
+        {% endif %}
+
+        <!-- Viewers Badge (For Owner) -->
+        <div id="viewers-badge" class="viewers-badge d-none" onclick="toggleViewers()">
+            <i class="bi bi-eye"></i> <span id="viewers-count">0</span>
+        </div>
+
+        <!-- Viewers Modal -->
+        <div id="viewers-modal" class="viewers-modal">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="text-white mb-0">Story Viewers</h5>
+                <button class="btn-close btn-close-white" onclick="toggleViewers()"></button>
+            </div>
+            <div id="viewers-list" class="overflow-auto h-75">
+                <!-- Viewers will be injected here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const stories = Array.from(document.querySelectorAll('.story-content')).map(el => ({
+        id: el.dataset.id,
+        image: el.dataset.image,
+        caption: el.dataset.caption,
+        time: el.dataset.time,
+        audio: el.dataset.audio,
+        isOwner: el.dataset.owner === 'true'
+    }));
+
+    let currentIndex = 0;
+    const duration = 5000; // 5 seconds per story
+    let timer;
+
+    function showStory(index) {
+        if (index >= stories.length) {
+            window.location.href = "{% url 'home' %}";
+            return;
+        }
+        if (index < 0) {
+            index = 0;
+        }
+        
+        currentIndex = index;
+        const story = stories[currentIndex];
+        
+        const wrapper = document.getElementById('active-content-wrapper');
+        wrapper.classList.remove('animate__animated', 'animate__fadeIn');
+        void wrapper.offsetWidth; // Trigger reflow
+        wrapper.classList.add('animate__animated', 'animate__fadeIn');
+
+        document.getElementById('active-image').src = story.image;
+        document.getElementById('active-caption').innerText = story.caption;
+        document.getElementById('story-time').innerText = story.time + ' ago';
+
+        // Audio Handling
+        const audioEl = document.getElementById('story-audio');
+        if (story.audio) {
+            audioEl.src = story.audio;
+            audioEl.play().catch(e => console.log("Audio play failed:", e));
+        } else {
+            audioEl.pause();
+            audioEl.src = "";
+        }
+
+        // Reset all progress bars
+        document.querySelectorAll('.progress-fill').forEach((el, i) => {
+            if (i < currentIndex) el.style.width = '100%';
+            else if (i > currentIndex) el.style.width = '0%';
+            else {
+                el.style.width = '0%';
+                setTimeout(() => el.style.width = '100%', 50);
+                el.style.transitionDuration = duration + 'ms';
+            }
+        });
+
+        // Delete Button Handling
+        const deleteBtn = document.getElementById('delete-story-btn');
+        if (story.isOwner) {
+            deleteBtn.classList.remove('d-none');
+        } else {
+            deleteBtn.classList.add('d-none');
+        }
+
+        clearTimeout(timer);
+        timer = setTimeout(nextStory, duration);
+
+        // Mark as viewed
+        markViewed(story.id);
+    }
+
+    async function markViewed(storyId) {
+        try {
+            const response = await fetch(`/story/view/${storyId}/`);
+            const data = await response.json();
+            if (data.status === 'success') {
+                const badge = document.getElementById('viewers-badge');
+                const count = document.getElementById('viewers-count');
+                const story = stories[currentIndex];
+                
+                if (story.isOwner) {
+                    badge.classList.remove('d-none');
+                    count.innerText = data.viewers_count;
+                    updateViewersList(data.viewers);
+                }
+            }
+        } catch (e) { console.error("View tracking failed", e); }
+    }
+
+    async function sendReaction(emoji, event) {
+        const story = stories[currentIndex];
+        try {
+            const response = await fetch(`/story/react/${story.id}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ emoji: emoji })
+            });
+            const data = await response.json();
+            if (data.status === 'success') {
+                // Visual feedback
+                const btn = event.currentTarget || document.activeElement;
+                btn.style.transform = 'scale(2) rotate(10deg)';
+                setTimeout(() => btn.style.transform = '', 300);
+            }
+        } catch (e) { console.error("Reaction failed", e); }
+    }
+
+    async function deleteStory() {
+        if (!confirm('Delete this story?')) return;
+        
+        const story = stories[currentIndex];
+        clearTimeout(timer); // Stop the story auto-skip
+        
+        try {
+            const response = await fetch(`/story/delete/${story.id}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            });
+            if (response.ok) {
+                window.location.href = "{% url 'home' %}";
+            } else {
+                alert('Deletion failed. Please try again.');
+                // Resume timer if failed? Or just leave it paused.
+                timer = setTimeout(nextStory, duration);
+            }
+        } catch (e) {
+            console.error(e);
+            alert('An error occurred.');
+            timer = setTimeout(nextStory, duration);
+        }
+    }
+
+    function toggleViewers() {
+        const modal = document.getElementById('viewers-modal');
+        modal.classList.toggle('show');
+    }
+
+    function updateViewersList(viewers) {
+        const list = document.getElementById('viewers-list');
+        list.innerHTML = viewers.map(v => `
+            <div class="viewer-item text-white">
+                <img src="${v.image}" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;">
+                <span>${v.username}</span>
+            </div>
+        `).join('');
+    }
+
+    function nextStory() {
+        showStory(currentIndex + 1);
+    }
+
+    function prevStory() {
+        showStory(currentIndex - 1);
+    }
+
+    // Close button
+    document.getElementById('close-story').onclick = () => {
+        window.location.href = "{% url 'home' %}";
+    };
+
+    // Start first story
+    showStory(0);
+</script>
+{% endblock %}

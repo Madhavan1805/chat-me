@@ -1,0 +1,50 @@
+/* Responsive CSS for Social Clone Project */
+
+/* Mobile first – default styles already defined in app.css */
+
+/* Tablet (≥576px) */
+@media (min-width: 576px) {
+  /* Example: increase navbar height and adjust avatar size */
+  .nav-avatar {
+    width: 44px;
+    height: 44px;
+  }
+  .bottom-nav {
+    height: 64px;
+  }
+}
+
+/* Small desktop (≥768px) */
+@media (min-width: 768px) {
+  .app-container {
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  .bottom-nav {
+    display: none; /* hide mobile bottom nav on larger screens */
+  }
+}
+
+/* Large desktop (≥992px) */
+@media (min-width: 992px) {
+  .navbar-expand-lg {
+    flex-wrap: nowrap;
+  }
+  .nav-search {
+    width: 250px;
+  }
+  .profile-img-container {
+    width: 200px;
+    height: 200px;
+  }
+}
+
+/* Extra large (≥1200px) */
+@media (min-width: 1200px) {
+  .app-container {
+    max-width: 1140px;
+  }
+  .bottom-nav-item {
+    font-size: 0.75rem;
+  }
+}

@@ -1,0 +1,99 @@
+{% extends 'posts/base.html' %}
+
+{% block title %}Create Story{% endblock %}
+
+{% block content %}
+<style>
+    .premium-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        background: radial-gradient(circle at 20% 20%, rgba(168, 85, 247, 0.3), transparent 40%),
+                    radial-gradient(circle at 80% 80%, rgba(217, 70, 239, 0.3), transparent 40%),
+                    radial-gradient(circle at 50% 50%, rgba(129, 140, 248, 0.2), transparent 50%),
+                    #130f1d;
+        animation: bgMove 15s infinite alternate ease-in-out;
+    }
+    @keyframes bgMove {
+        from { transform: scale(1); }
+        to { transform: scale(1.1); }
+    }
+    .glass-card {
+        background: rgba(255, 255, 255, 0.08) !important;
+        backdrop-filter: blur(25px) saturate(160%) !important;
+        -webkit-backdrop-filter: blur(25px) saturate(160%) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        border-radius: 24px !important;
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4) !important;
+    }
+    .glass-header-premium {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-top-left-radius: 24px !important;
+        border-top-right-radius: 24px !important;
+    }
+    .btn-glow {
+        background: linear-gradient(135deg, #a855f7, #d946ef) !important;
+        border: none !important;
+        color: white !important;
+        box-shadow: 0 0 15px rgba(168, 85, 247, 0.5) !important;
+        transition: all 0.3s ease !important;
+    }
+    .btn-glow:hover {
+        box-shadow: 0 0 25px rgba(168, 85, 247, 0.8) !important;
+        transform: translateY(-2px);
+    }
+    .form-label-premium {
+        color: rgba(255, 255, 255, 0.9) !important;
+        font-weight: 600;
+        margin-bottom: 8px;
+        font-size: 0.95rem;
+    }
+    .camera-icon-float {
+        display: inline-block;
+        animation: float 3s infinite ease-in-out;
+    }
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
+    }
+</style>
+<div class="premium-bg"></div>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card glass-card animate__animated animate__fadeInUp">
+                <div class="card-header glass-header-premium text-white text-center py-4">
+                    <h3 class="mb-0"><i class="bi bi-camera-fill me-2 camera-icon-float"></i>New Story</h3>
+                </div>
+                <div class="card-body p-4 p-md-5">
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label for="{{ form.image.id_for_label }}" class="form-label-premium">Story Image</label>
+                            {{ form.image }}
+                        </div>
+                        <div class="mb-4">
+                            <label for="{{ form.audio.id_for_label }}" class="form-label-premium">Story Audio (Optional)</label>
+                            {{ form.audio }}
+                        </div>
+                        <div class="mb-4">
+                            <label for="{{ form.caption.id_for_label }}" class="form-label-premium">Caption (Optional)</label>
+                            {{ form.caption }}
+                        </div>
+                        <div class="d-grid gap-3">
+                            <button type="submit" class="btn btn-glow btn-lg">
+                                <i class="bi bi-cloud-upload me-2"></i>Post Story
+                            </button>
+                            <a href="{% url 'home' %}" class="btn btn-outline-light rounded-pill">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

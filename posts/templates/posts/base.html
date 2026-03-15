@@ -1,0 +1,204 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#201433">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>{% block title %}Secret Chat{% endblock %}</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link rel="stylesheet" href="{% static 'posts/app.css' %}">
+    <link rel="stylesheet" href="{% static 'posts/responsive.css' %}">
+</head>
+<body class="app" data-theme="{% if user.is_authenticated and user.profile %}{{ user.profile.theme|default:'dark' }}{% else %}dark{% endif %}">
+
+    <nav class="navbar navbar-expand-lg navbar-dark glass-navbar fixed-top">
+        <div class="container-fluid px-3 px-md-4">
+            <a class="navbar-brand fs-5 fs-md-4" href="{% url 'home' %}">
+                <i class="bi bi-stars me-1"></i> Secret Chat
+            </a>
+
+            {% if user.is_authenticated %}
+            <!-- Mobile: icons always visible next to Secret Chat (no collapse) -->
+            <div class="d-flex d-lg-none align-items-center gap-2 ms-auto">
+                <a class="nav-link py-1 px-2 position-relative" href="{% url 'notifications' %}" title="Notifications">
+                    <i class="bi bi-bell-fill fs-5"></i>
+                    {% if unread_notifications_count > 0 %}
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.55em; padding: 0.35em 0.5em;">
+                            {{ unread_notifications_count }}
+                        </span>
+                    {% endif %}
+                </a>
+                <a class="nav-link py-1 px-2 position-relative" href="{% url 'inbox' %}" title="Messages" aria-label="Messages">
+                    <i class="bi bi-chat-dots-fill fs-5"></i>
+                    {% if unread_count > 0 %}
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.55em; padding: 0.35em 0.5em;">
+                            {{ unread_count }}
+                        </span>
+                    {% endif %}
+                </a>
+                <a class="nav-link py-1 px-1" href="{% url 'profile' username=user.username %}" title="Profile" aria-label="Profile">
+                    <img src="{{ user.profile.image.url }}" alt="DP" class="rounded-circle nav-avatar img-cover" style="width: 36px; height: 36px; object-fit: cover;"
+                         onerror="this.onerror=null; this.src='{% if request.scheme and request.get_host %}{{ request.scheme }}://{{ request.get_host }}{{ MEDIA_URL }}profile_pics/default.png{% else %}{{ MEDIA_URL }}profile_pics/default.png{% endif %}';">
+                </a>
+                <div class="dropdown">
+                    <button class="btn btn-link nav-link py-1 px-2 text-white dropdown-toggle no-arrow-after" type="button" data-bs-toggle="dropdown" aria-label="Menu">
+                        <i class="bi bi-three-dots-vertical fs-5"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end glass-dropdown">
+                        <li><a class="dropdown-item" href="{% url 'update_profile' %}"><i class="bi bi-pencil me-2"></i>Edit Profile</a></li>
+                        {% if user.is_staff %}
+                        <li><a class="dropdown-item text-danger" href="{% url 'admin_dashboard' %}">Dashboard</a></li>
+                        <li><a class="dropdown-item text-danger" href="{% url 'admin:index' %}">Admin Panel</a></li>
+                        {% endif %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form method="post" action="{% url 'logout' %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="dropdown-item text-danger">
+                                    <i class="bi bi-box-arrow-right me-2"></i> Logout
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Desktop: toggler for search on small, full nav on lg -->
+            <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSearch" aria-label="Search">
+                <i class="bi bi-search"></i>
+            </button>
+            {% endif %}
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                {% if user.is_authenticated %}
+                <form class="d-flex mx-auto my-2 my-lg-0" method="GET" action="{% url 'search' %}">
+                    <input class="form-control me-2 nav-search" type="search" placeholder="Search Users or Posts" aria-label="Search" name="q" required>
+                    <button class="btn btn-outline-light nav-search-btn" type="submit"><i class="bi bi-search"></i></button>
+                </form>
+                {% endif %}
+
+                <ul class="navbar-nav ms-auto align-items-center d-none d-lg-flex">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item me-2">
+                             <a class="nav-link position-relative" href="{% url 'notifications' %}" title="Notifications">
+                                 <i class="bi bi-bell-fill fs-5"></i>
+                                 {% if unread_notifications_count > 0 %}
+                                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65em;">
+                                         {{ unread_notifications_count }}
+                                         <span class="visually-hidden">unread notifications</span>
+                                     </span>
+                                 {% endif %}
+                             </a>
+                        </li>
+                        <li class="nav-item me-2">
+                             <a class="nav-link position-relative" href="{% url 'inbox' %}" title="Inbox">
+                                 <i class="bi bi-chat-dots-fill fs-5"></i>
+                                 {% if unread_count > 0 %}
+                                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65em;">
+                                         {{ unread_count }}
+                                         <span class="visually-hidden">unread messages</span>
+                                     </span>
+                                 {% endif %}
+                             </a>
+                        </li>
+                        <li class="nav-item me-3">
+                            <a class="nav-link p-0" href="{% url 'profile' username=user.username %}">
+                                <img src="{{ user.profile.image.url }}" alt="DP" class="rounded-circle nav-avatar img-cover" style="width: 36px; height: 36px; object-fit: cover;"
+                                     onerror="this.onerror=null; this.src='{% if request.scheme and request.get_host %}{{ request.scheme }}://{{ request.get_host }}{{ MEDIA_URL }}profile_pics/default.png{% else %}{{ MEDIA_URL }}profile_pics/default.png{% endif %}';">
+                            </a>
+                        </li>
+                        <li class="nav-item me-3">
+                            <a class="nav-link" href="{% url 'update_profile' %}">Edit Profile</a>
+                        </li>
+                        {% if user.is_staff %}
+                            <li class="nav-item"><a class="nav-link text-danger" href="{% url 'admin_dashboard' %}">Dashboard</a></li>
+                            <li class="nav-item"><a class="nav-link text-danger" href="{% url 'admin:index' %}">Admin Panel</a></li>
+                        {% endif %}
+                        <li class="nav-item">
+                            <form method="post" action="{% url 'logout' %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="logout-btn nav-link">
+                                    <i class="bi bi-box-arrow-right"></i> Logout
+                                </button>
+                            </form>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="btn btn-glass btn-sm" href="{% url 'login' %}">
+                                <i class="bi bi-box-arrow-in-right me-1"></i> Login
+                            </a>
+                        </li>
+                        <li class="nav-item ms-2">
+                            <a class="btn btn-glass-outline btn-sm" href="{% url 'register' %}">
+                                <i class="bi bi-person-add me-1"></i> Register
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+        {% if user.is_authenticated %}
+        <div class="collapse container-fluid px-3 d-lg-none" id="navbarSearch">
+            <form class="d-flex py-2" method="GET" action="{% url 'search' %}">
+                <input class="form-control me-2 nav-search" type="search" placeholder="Search Users or Posts" name="q" required>
+                <button class="btn btn-outline-light nav-search-btn" type="submit"><i class="bi bi-search"></i></button>
+            </form>
+        </div>
+        {% endif %}
+    </nav>
+
+    <!-- Theme Overlay (prevents flash of wrong theme) -->
+    <script>
+        (function() {
+            const theme = "{{ user.profile.theme|default:'dark' }}";
+            document.body.setAttribute('data-theme', theme);
+        })();
+    </script>
+
+    <!-- Mobile bottom nav (Android-style) -->
+    {% if user.is_authenticated %}
+    <nav class="bottom-nav d-lg-none" aria-label="Main">
+        <a href="{% url 'home' %}" class="bottom-nav-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+            <i class="bi bi-house-fill"></i>
+            <span>Home</span>
+        </a>
+        <a href="{% url 'inbox' %}" class="bottom-nav-item {% if request.resolver_match.url_name == 'inbox' or request.resolver_match.url_name == 'chat_detail' %}active{% endif %}">
+            <i class="bi bi-chat-dots-fill"></i>
+            <span>Messages</span>
+        </a>
+        <a href="{% url 'create_post' %}" class="bottom-nav-item bottom-nav-create">
+            <i class="bi bi-plus-lg"></i>
+            <span>Post</span>
+        </a>
+        <a href="{% url 'profile' username=user.username %}" class="bottom-nav-item {% if request.resolver_match.url_name == 'profile' and request.resolver_match.kwargs.username == user.username %}active{% endif %}">
+            <i class="bi bi-person-fill"></i>
+            <span>Profile</span>
+        </a>
+    </nav>
+    {% endif %}
+
+    <div class="container mt-5 pt-5 app-container pb-5 pb-mobile-nav">
+        {% if messages %}
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show animate__animated animate__fadeInDown glass-alert" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+        
+        {% block content %}{% endblock content %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

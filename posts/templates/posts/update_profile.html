@@ -1,0 +1,120 @@
+{% extends 'posts/base.html' %}
+
+{% block title %}Edit Profile{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header glass-header">
+                <strong>Edit Profile</strong>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data" class="profile-form">
+                    {% csrf_token %}
+
+                    <!-- Profile Photo Selection (Centered) -->
+                    <div class="mb-5 d-flex flex-column align-items-center justify-content-center text-center">
+                        <div class="position-relative mb-3">
+                            <img src="{{ request.user.profile.image.url }}" alt="Current avatar" class="rounded-circle profile-current-avatar border border-2 border-secondary"
+                                 onerror="this.onerror=null; this.src='{{ request.scheme }}://{{ request.get_host }}{{ MEDIA_URL }}profile_pics/default.png';">
+                        </div>
+                        <div class="file-upload-wrapper w-50">
+                            {{ p_form.image }}
+                            {% for error in p_form.image.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                            <small class="text-muted d-block mt-2">Change Profile Photo</small>
+                        </div>
+                    </div>
+
+                    <!-- Personal Information Stack -->
+                    <h6 class="text-muted mb-3 text-uppercase" style="font-size: 0.8rem; letter-spacing: 1px;">Public Profile Setup</h6>
+                    
+                    <div class="mb-3">
+                        <label class="form-label text-white-50 small">Username / Name</label>
+                        {{ u_form.username }}
+                        {% for error in u_form.username.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-white-50 small">Nickname (Optional)</label>
+                        {{ p_form.nickname }}
+                        {% for error in p_form.nickname.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                        <small class="text-muted" style="font-size: 0.75rem;">This will be displayed on your profile as your display name.</small>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-white-50 small">Bio</label>
+                        {{ p_form.bio }}
+                        {% for error in p_form.bio.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label text-white-50 small"><i class="bi bi-palette me-1"></i> Theme Preference</label>
+                        {{ p_form.theme }}
+                        {% for error in p_form.theme.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                        <small class="text-muted" style="font-size: 0.75rem;">Choose your preferred visual style for the entire website.</small>
+                    </div>
+
+                    <div class="mb-4 p-3 glass-card" style="background: rgba(255,255,255,0.05); border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                        <div class="form-check form-switch">
+                            <label class="form-check-label text-white" for="id_is_private">
+                                <i class="bi bi-shield-lock me-2"></i> Private Account
+                            </label>
+                            {{ p_form.is_private }}
+                        </div>
+                        <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">When your account is private, only people you approve can see your photos and videos.</small>
+                    </div>
+                    
+                    <!-- Social Links Stack -->
+                    <h6 class="text-muted mb-3 text-uppercase mt-4 border-top pt-4" style="font-size: 0.8rem; letter-spacing: 1px;">Social Media Links</h6>
+                    
+                    <div class="mb-3">
+                        <label class="form-label text-white-50 small"><i class="bi bi-instagram me-1"></i> Instagram URL</label>
+                        {{ p_form.instagram_url }}
+                        {% for error in p_form.instagram_url.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-white-50 small"><i class="bi bi-twitter-x me-1"></i> Twitter (X) URL</label>
+                        {{ p_form.twitter_url }}
+                        {% for error in p_form.twitter_url.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-white-50 small"><i class="bi bi-facebook me-1"></i> Facebook URL</label>
+                        {{ p_form.facebook_url }}
+                        {% for error in p_form.facebook_url.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4 border-top pt-4">
+                        <a class="btn btn-glass-outline" href="{% url 'profile' username=request.user.username %}">Cancel</a>
+                        <button type="submit" class="btn btn-glass">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 d-none d-md-block">
+        <!-- Optional preview/sidebar -->
+    </div>
+    
+</div>
+{% endblock content %}
+
+
